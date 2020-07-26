@@ -112,7 +112,7 @@ class BibFieldMarcReaderMarcXML(InvenioTestCase):
                 </datafield>
             </record>
         """
-        blob = BlobWrapper(blob=xml, master_format='marc', schema='xml')
+        blob = BlobWrapper(blob=xml, main_format='marc', schema='xml')
         r = MarcReader(blob)
 
         self.assertTrue(r.rec_tree)
@@ -443,11 +443,11 @@ class BibFieldMarcReaderMarcXML(InvenioTestCase):
                 </datafield>
             </record>
         """
-        blob = BlobWrapper(blob=xml, master_format='marc', schema="xml")
+        blob = BlobWrapper(blob=xml, main_format='marc', schema="xml")
         r = MarcReader(blob)
 
         self.assertTrue(r.rec_json)
-        self.assertTrue(r['__master_format'] == 'marc')
+        self.assertTrue(r['__main_format'] == 'marc')
         self.assertTrue('authors' in r)
         self.assertTrue(r['authors[0].full_name'] == "Efstathiou, G P")
         self.assertTrue(len(r['authors']) == 5)
@@ -512,7 +512,7 @@ class BibFieldMarcReaderMarcXML(InvenioTestCase):
         fd, name = tempfile.mkstemp(suffix='.xml', dir=CFG_TMPDIR)
         os.write(fd, xml)
         os.close(fd)
-        blob = BlobWrapper(blob='', master_format='marc', schema='file:xml', blob_file_name=name)
+        blob = BlobWrapper(blob='', main_format='marc', schema='file:xml', blob_file_name=name)
         r = MarcReader(blob)
 
         self.assertTrue(r.rec_json)
@@ -529,7 +529,7 @@ class BibFieldMarcReaderRecstruct(InvenioTestCase):
         """BibField -intermediate structure from recjson"""
         from invenio.search_engine import get_record as search_engine_get_record
         bibrecord = search_engine_get_record(13)
-        blob = BlobWrapper(blob=bibrecord, master_format='marc', schema='recstruct')
+        blob = BlobWrapper(blob=bibrecord, main_format='marc', schema='recstruct')
         r = MarcReader(blob)
 
         self.assertTrue(r.rec_tree)
@@ -540,11 +540,11 @@ class BibFieldMarcReaderRecstruct(InvenioTestCase):
         """BibField - recjson from recstruct"""
         from invenio.search_engine import get_record as search_engine_get_record
         bibrecord = search_engine_get_record(7)
-        blob = BlobWrapper(blob=bibrecord, master_format='marc', schema='recstruct')
+        blob = BlobWrapper(blob=bibrecord, main_format='marc', schema='recstruct')
         r = MarcReader(blob)
 
         self.assertTrue(r.rec_json)
-        self.assertTrue(r['__master_format'] == 'marc')
+        self.assertTrue(r['__main_format'] == 'marc')
         self.assertTrue('title' in r)
         self.assertTrue(r['title.title'] == 'Tim Berners-Lee')
         self.assertTrue('collection.primary' in r)
@@ -608,7 +608,7 @@ class BibFieldCheckRecord(InvenioTestCase):
                 </datafield>
               </record>
               """
-        blob = BlobWrapper(blob=xml, master_format='marc', schema="xml")
+        blob = BlobWrapper(blob=xml, main_format='marc', schema="xml")
         r = MarcReader(blob, check=True)
 
         self.assertTrue('title' in r)

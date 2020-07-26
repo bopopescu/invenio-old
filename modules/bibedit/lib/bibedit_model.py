@@ -46,7 +46,7 @@ class Bibrec(db.Model):
     modification_date = db.Column(db.DateTime, nullable=False,
                 server_default='1900-01-01 00:00:00',
                 index=True)
-    master_format = db.Column(db.String(16), nullable=False,
+    main_format = db.Column(db.String(16), nullable=False,
                               server_default='marc')
 
     @property

@@ -61,19 +61,19 @@ def delete_record_cache(sender, recid=None, **kwargs):
     get_record(recid, reset_cache=True)
 
 
-def create_record(blob, master_format='marc', verbose=0, **additional_info):
+def create_record(blob, main_format='marc', verbose=0, **additional_info):
     """
     Creates a record object from the blob description using the apropiate reader
     for it.
 
     @return Record object
     """
-    blob_wrapper = BlobWrapper(blob=blob, master_format=master_format, **additional_info)
+    blob_wrapper = BlobWrapper(blob=blob, main_format=main_format, **additional_info)
 
-    return CFG_BIBFIELD_READERS[master_format](blob_wrapper, check=True)
+    return CFG_BIBFIELD_READERS[main_format](blob_wrapper, check=True)
 
 
-def create_records(blob, master_format='marc', verbose=0, **additional_info):
+def create_records(blob, main_format='marc', verbose=0, **additional_info):
     """
     Creates a list of records from the blod descriptions using the split_records
     function to divide then.
@@ -82,9 +82,9 @@ def create_records(blob, master_format='marc', verbose=0, **additional_info):
 
     @return List of record objects initiated by the functions create_record()
     """
-    record_blods = CFG_BIBFIELD_READERS[master_format].split_blob(blob, additional_info.get('schema', None))
+    record_blods = CFG_BIBFIELD_READERS[main_format].split_blob(blob, additional_info.get('schema', None))
 
-    return [create_record(record_blob, master_format, verbose=verbose, **additional_info) for record_blob in record_blods]
+    return [create_record(record_blob, main_format, verbose=verbose, **additional_info) for record_blob in record_blods]
 
 
 def get_record(recid, reset_cache=False, fields=()):
@@ -110,7 +110,7 @@ def get_record(recid, reset_cache=False, fields=()):
         blob_wrapper = _build_wrapper(recid)
         if not blob_wrapper:
             return None
-        record = CFG_BIBFIELD_READERS[blob_wrapper.master_format](blob_wrapper)
+        record = CFG_BIBFIELD_READERS[blob_wrapper.main_format](blob_wrapper)
 
         #Update bibfmt for future uses
         run_sql("REPLACE INTO bibfmt(id_bibrec, format, last_updated, value) VALUES (%s, 'recjson', NOW(), %s)",
@@ -123,7 +123,7 @@ def get_record(recid, reset_cache=False, fields=()):
         record = chunk
     return record
 
-def guess_legacy_field_names(fields, master_format='marc'):
+def guess_legacy_field_names(fields, main_format='marc'):
     """
     Using the legacy rules written in the config file (@legacy) tries to find
     the equivalent json field for one or more legacy fields.
@@ -138,7 +138,7 @@ def guess_legacy_field_names(fields, master_format='marc'):
         fields = (fields, )
     for field in fields:
         try:
-            res[field] = legacy_rules[master_format].get(field, [])
+            res[field] = legacy_rules[main_format].get(field, [])
         except:
             res[field] = []
     return res
@@ -148,16 +148,16 @@ def _build_wrapper(recid):
     #TODO: update to look inside mongoDB for the parameters and the blob
     # Now is just working for marc and recstruct
     try:
-        master_format = run_sql("SELECT master_format FROM bibrec WHERE id=%s", (recid,))[0][0]
+        main_format = run_sql("SELECT main_format FROM bibrec WHERE id=%s", (recid,))[0][0]
     except:
         return None
 
     schema = 'recstruct'
 
-    if master_format == 'marc':
+    if main_format == 'marc':
         from invenio.search_engine import get_record as se_get_record
         blob = se_get_record(recid)
     else:
         return None
 
-    return BlobWrapper(blob, master_format=master_format, schema=schema)
+    return BlobWrapper(blob, main_format=main_format, schema=schema)

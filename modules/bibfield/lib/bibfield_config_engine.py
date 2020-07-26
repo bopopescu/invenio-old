@@ -58,14 +58,14 @@ def _create_config_parser():
     calculated ::= "calculated:" INDENT derived_calculated_body UNDENT
     derived_calculated_body ::= [decorators] "," python_allowed_exp
 
-    decorators ::= (peristent_identfier | legacy | do_not_cache | parse_first | depends_on | only_if | only_if_master_value)*
+    decorators ::= (peristent_identfier | legacy | do_not_cache | parse_first | depends_on | only_if | only_if_main_value)*
     peristent_identfier ::= @persitent_identifier( level )
     legacy ::= "@legacy(" correspondences+ ")"
     correspondences ::= "(" source_tag [ "," tag_name ] "," json_id ")"
     parse_first ::= "@parse_first(" jsonid+ ")"
     depends_on ::= "@depends_on(" json_id+ ")"
     only_if ::= "@only_if(" python_condition+ ")"
-    only_if_master_value ::= "@only_if_master_value(" python_condition+  ")"
+    only_if_main_value ::= "@only_if_main_value(" python_condition+  ")"
 
     inherit_from ::= "@inherit_from()"
     do_not_cache ::= "@do_not_cache"
@@ -128,22 +128,22 @@ def _create_config_parser():
              .setResultsName("legacy", listAllMatches=True)
     only_if = (Suppress("@only_if") + originalTextFor(nestedExpr("(", ")")))\
               .setResultsName("only_if")
-    only_if_master_value = (Suppress("@only_if_value") + originalTextFor(nestedExpr("(", ")")))\
-                    .setResultsName("only_if_master_value")
+    only_if_main_value = (Suppress("@only_if_value") + originalTextFor(nestedExpr("(", ")")))\
+                    .setResultsName("only_if_main_value")
     depends_on = (Suppress("@depends_on") + originalTextFor(nestedExpr("(", ")")))\
                  .setResultsName("depends_on")
     parse_first = (Suppress("@parse_first") + originalTextFor(nestedExpr("(", ")")))\
                   .setResultsName("parse_first")
     do_not_cache = (Suppress("@") + "do_not_cache")\
                    .setResultsName("do_not_cache")
-    field_decorator = parse_first ^ depends_on ^ only_if ^ only_if_master_value ^ do_not_cache ^ legacy
+    field_decorator = parse_first ^ depends_on ^ only_if ^ only_if_main_value ^ do_not_cache ^ legacy
 
     #Independent decorators
     inherit_from = (Suppress("@inherit_from") + originalTextFor(nestedExpr("(", ")")))\
                     .setResultsName("inherit_from")
 
-    master_format = (Suppress("@master_format") + originalTextFor(nestedExpr("(", ")")))\
-                    .setResultsName("master_format")
+    main_format = (Suppress("@main_format") + originalTextFor(nestedExpr("(", ")")))\
+                    .setResultsName("main_format")
 
     derived_calculated_body = ZeroOrMore(field_decorator) + python_allowed_expr
 
@@ -159,7 +159,7 @@ def _create_config_parser():
                    .setResultsName("creator_def", listAllMatches=True)
     creator = "creator" + Suppress(":") + INDENT + OneOrMore(creator_body) + UNDENT
 
-    checker_function = (Optional(master_format) + ZeroOrMore(ident + ".") + ident + originalTextFor(nestedExpr('(', ')')))\
+    checker_function = (Optional(main_format) + ZeroOrMore(ident + ".") + ident + originalTextFor(nestedExpr('(', ')')))\
                        .setResultsName("checker_function", listAllMatches=True)
     checker = ("checker" + Suppress(":") + INDENT + OneOrMore(checker_function) + UNDENT)
 
@@ -297,7 +297,7 @@ class BibFieldParser(object):
                                'parse_first'         : (parse_first_json_ids),
                                'depends_on'          : (depends_on_json_id),
                                'only_if'             : (only_if_boolean_expressions),
-                               'only_if_master_value': (only_if_master_value_boolean_expressions),
+                               'only_if_main_value': (only_if_main_value_boolean_expressions),
                              },
                     'checker': [(function_name, arguments), ...]
                     'documentation' : {'doc_string': '...',
@@ -341,14 +341,14 @@ class BibFieldParser(object):
                 #Allow several tags point to the same json id
                 rules[source_format] = []
 
-            (depends_on, only_if, only_if_master_value, parse_first) = self._create_decorators_content(creator)
+            (depends_on, only_if, only_if_main_value, parse_first) = self._create_decorators_content(creator)
             self._create_legacy_rules(creator.legacy, json_id, source_format)
 
             rules[source_format].append({'source_tag'           : creator.source_tag[0].split(),
                                          'value'                : creator.value[0],
                                          'depends_on'           : depends_on,
                                          'only_if'              : only_if,
-                                         'only_if_master_value' : only_if_master_value,
+                                         'only_if_main_value' : only_if_main_value,
                                          'parse_first'          : parse_first})
 
         #Chech duplicate names to overwrite configuration
@@ -402,7 +402,7 @@ class BibFieldParser(object):
         if rule.persistent_identifier:
             persistent_id = int(rule.persistent_identifier[0][0])
 
-        (depends_on, only_if, only_if_master_value, parse_first) = self._create_decorators_content(rule)
+        (depends_on, only_if, only_if_main_value, parse_first) = self._create_decorators_content(rule)
         self._create_legacy_rules(rule.legacy, json_id)
 
         self.config_rules[json_id] = {'rules'        : {},
@@ -417,7 +417,7 @@ class BibFieldParser(object):
         self.config_rules[json_id]['rules'] = {'value'               : rule.value[0],
                                                'depends_on'          : depends_on,
                                                'only_if'             : only_if,
-                                               'only_if_master_value': only_if_master_value,
+                                               'only_if_main_value': only_if_main_value,
                                                'parse_first'         : parse_first,
                                                'do_not_cache'        : do_not_cache}
 
@@ -429,18 +429,18 @@ class BibFieldParser(object):
         """
         Extracts from the rule all the possible decorators.
         """
-        depends_on = only_if = only_if_master_value = parse_first = None
+        depends_on = only_if = only_if_main_value = parse_first = None
 
         if rule.depends_on:
             depends_on = rule.depends_on[0]
         if rule.only_if:
             only_if = rule.only_if[0]
-        if rule.only_if_master_value:
-            only_if_master_value = rule.only_if_master_value[0]
+        if rule.only_if_main_value:
+            only_if_main_value = rule.only_if_main_value[0]
         if rule.parse_first:
             parse_first = rule.parse_first[0]
 
-        return (depends_on, only_if, only_if_master_value, parse_first)
+        return (depends_on, only_if, only_if_main_value, parse_first)
 
     def _create_legacy_rules(self, legacy_rules, json_id, source_format=None):
         """
@@ -509,17 +509,17 @@ class BibFieldParser(object):
             if self.config_rules[json_id]['overwrite']:
                 self.config_rules[json_id]['checker'] = []
             for checker in rule.checker_function:
-                if checker.master_format:
-                    master_format = eval(rule.master_format[0])
+                if checker.main_format:
+                    main_format = eval(rule.main_format[0])
                     checker_function_name = checker[1]
                     arguments = checker[2][1:-1]
                 else:
-                    master_format = ('all',)
+                    main_format = ('all',)
                     checker_function_name = checker[0]
                     arguments = checker[1][1:-1]
 
-                #json_id : (master_format, checker_name, parameters)
-                self.config_rules[json_id]['checker'].append((master_format,
+                #json_id : (main_format, checker_name, parameters)
+                self.config_rules[json_id]['checker'].append((main_format,
                                                               checker_function_name,
                                                               arguments))
 

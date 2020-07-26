@@ -501,7 +501,7 @@ def dispatch():
 
         # ERROR: parser of GET arguments in 'next' does not parse lists
         # only the first element of a list is passed to webbasket.add
-        # (however, this url works in 'master' with the same webbasket module)
+        # (however, this url works in 'main' with the same webbasket module)
 
 
     flash("Not implemented action " + action, 'error')

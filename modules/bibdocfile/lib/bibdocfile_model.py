@@ -46,7 +46,7 @@ class Bibdocfsinfo(db.Model):
     filesize = db.Column(db.BigInteger(15, unsigned=True), nullable=False,
                     index=True)
     mime = db.Column(db.String(100), nullable=False, index=True)
-    master_format = db.Column(db.String(50))
+    main_format = db.Column(db.String(50))
 
 
 class Bibdocmoreinfo(db.Model):

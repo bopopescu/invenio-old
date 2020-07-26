@@ -579,7 +579,7 @@ def format_with_format_template(format_template_filename, bfo,
         if bfo.recID is not None:
             record = bibfield_get_record(bfo.recID)
         else:
-            record = bibfield_create_record(bfo.xml_record, master_format='marc')
+            record = bibfield_create_record(bfo.xml_record, main_format='marc')
             bfo.recID = bfo.recID if bfo.recID is not None else 0
         record.__getitem__ = encode_utf8(record.__getitem__)
         record.get = encode_utf8(record.get)

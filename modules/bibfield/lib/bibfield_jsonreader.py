@@ -68,9 +68,9 @@ class JsonReader(BibFieldDict):
 
         if self.blob_wrapper:
             try:
-                self['__master_format'] = self.blob_wrapper.master_format
+                self['__main_format'] = self.blob_wrapper.main_format
             except AttributeError:
-                pass  # We are retrieving the cached version from the data base containing __master_format
+                pass  # We are retrieving the cached version from the data base containing __main_format
 
             self._prepare_blob()
             self._translate()
@@ -79,7 +79,7 @@ class JsonReader(BibFieldDict):
                 self.check_record()
             self.is_init_phase = False
         else:
-            self['__master_format'] = 'json'
+            self['__main_format'] = 'json'
 
     @staticmethod
     def split_blob(blob, schema):
@@ -117,7 +117,7 @@ class JsonReader(BibFieldDict):
         def check_rules(checker_functions, key):
             """docstring for check_rule"""
             for checker_function in checker_functions:
-                if 'all' in checker_function[0] or self['__master_format'] in checker_function[0]:
+                if 'all' in checker_function[0] or self['__main_format'] in checker_function[0]:
                     try:
                         self._try_to_eval("%s(self,'%s',%s)" % (checker_function[1], key, checker_function[2]))
                     except InvenioBibFieldContinuableError, err:
@@ -254,7 +254,7 @@ class JsonReader(BibFieldDict):
 
         if rule_def['type'] == 'real':
             try:
-                rules = rule_def['rules'][self['__master_format']]
+                rules = rule_def['rules'][self['__main_format']]
             except KeyError:
                 return False
             return all(self._apply_rule(field_name, rule_def['aliases'], rule) for rule in rules)
@@ -277,7 +277,7 @@ class JsonReader(BibFieldDict):
                     if isinstance(elements, list):
                         returned_value = False
                         for element in elements:
-                            if rule['only_if_master_value'] and not all(self._try_to_eval(rule['only_if_master_value'], value=element)):
+                            if rule['only_if_main_value'] and not all(self._try_to_eval(rule['only_if_main_value'], value=element)):
                                 returned_value = returned_value or False
                             else:
                                 try:
@@ -287,7 +287,7 @@ class JsonReader(BibFieldDict):
                                     self['__error_messages.error[n]'] = 'Rule Error - Unable to apply rule for field %s - %s' % (field_name, str(e))
                                     returned_value = returned_value or False
                     else:
-                        if rule['only_if_master_value'] and not all(self._try_to_eval(rule['only_if_master_value'], value=elements)):
+                        if rule['only_if_main_value'] and not all(self._try_to_eval(rule['only_if_main_value'], value=elements)):
                             return False
                         else:
                             try:
